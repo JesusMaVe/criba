@@ -21,6 +21,8 @@ compose.yaml    PostgreSQL 18 + Kafka 4.3 (KRaft, un nodo)
 docs/
   Arquitectura — App de research transparente con IA (Java + Kafka).md   el qué y el por qué
   PROPUESTA-ARQUITECTURA.md                                              el cómo y el estado
+  DISENO.md                                                              tokens y estructura de la interfaz
+  diseno/                                                                pantallas de referencia
 ```
 
 ## Requisitos
