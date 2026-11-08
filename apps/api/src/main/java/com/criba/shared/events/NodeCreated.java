@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public record NodeCreated(
         UUID nodeId,
-        String kind,
+        String nodeKind,
         String title,
         String doi,
         String openalexId,

@@ -18,9 +18,9 @@ spring:
     producer:
       acks: all
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: false
+      # Modulith ya entrega el evento serializado a JSON (bytes): aquí no se vuelve a serializar.
+      # Con JsonSerializer el evento salía envuelto en base64.
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
   modulith:
     events:
       # Las publicaciones completadas se borran: la tabla no crece sin techo.
