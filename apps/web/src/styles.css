@@ -1,0 +1,200 @@
+:root {
+  color-scheme: light dark;
+  --bg: #fbfaf7;
+  --fg: #1b1b1a;
+  --muted: #6b6a66;
+  --line: #e2ded6;
+  --accent: #2f5d50;
+  --error: #a3322a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181a;
+    --fg: #ecebe7;
+    --muted: #9b9a95;
+    --line: #2c2f31;
+    --accent: #7fbfa8;
+    --error: #e08379;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 2rem 1.5rem;
+}
+
+.panel {
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.panel.wide {
+  max-width: 76rem;
+}
+
+h1 {
+  font-size: 1.35rem;
+  margin: 0.35rem 0 0.15rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.error {
+  color: var(--error);
+  font-size: 0.9rem;
+}
+
+.stack {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+input,
+select,
+button {
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg);
+}
+
+button {
+  cursor: pointer;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.row input[name='title'] {
+  flex: 2 1 18rem;
+}
+
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1rem;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.dot.conectado {
+  background: #3f9a63;
+}
+
+.dot.desconectado {
+  background: var(--error);
+}
+
+table.nodes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+table.nodes th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem 0.4rem;
+}
+
+table.nodes td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.55rem 0.4rem;
+  vertical-align: top;
+}
+
+td.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.state {
+  font-variant: all-small-caps;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+
+.state-candidato {
+  color: var(--muted);
+}
+
+.state-preseleccionado {
+  color: #8a6d1f;
+}
+
+.state-aceptado {
+  color: var(--accent);
+}
+
+.state-definitivo {
+  color: #1d7a4d;
+}
+
+.state-descartado {
+  color: var(--error);
+  text-decoration: line-through;
+}
