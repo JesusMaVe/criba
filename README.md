@@ -9,7 +9,9 @@ procedencia, y cada decisión de aceptarlo o descartarlo queda registrada con su
 
 **Etapa 0 completa.** El esqueleto caminante funciona de punta a punta: comando por REST →
 transacción en PostgreSQL → evento externalizado a Kafka → hecho reenviado por WebSocket → tablero
-actualizado en otra pestaña.
+actualizado en otra pestaña, con la interfaz ya vestida según `docs/DISENO.md`.
+
+![Tablero](docs/capturas/etapa-0-tablero.png)
 
 ## Estructura
 
@@ -23,6 +25,7 @@ docs/
   PROPUESTA-ARQUITECTURA.md                                              el cómo y el estado
   DISENO.md                                                              tokens y estructura de la interfaz
   diseno/                                                                pantallas de referencia
+  capturas/                                                              cómo se ve la etapa 0
 ```
 
 ## Requisitos

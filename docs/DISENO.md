@@ -88,3 +88,17 @@ Cada tarjeta lleva su icono de estado junto a la etiqueta, el título en negrita
 4. **Qué cuenta como «activa».** El aviso de re-evaluación, la tabla y el heatmap deben usar el
    mismo criterio: nodos no descartados, o no descartados y no definitivos. Hoy el diseño usa 26 en
    dos sitios y la barra lateral suma 29.
+
+## Implementado en la Etapa 0
+
+| Pieza | Estado |
+| --- | --- |
+| Barra superior con migas, `Compartir` (copia el enlace) y menú | hecho |
+| Barra lateral con pregunta, conteo por estado y descartados ocultos | hecho |
+| Lienzo SVG con pan, zoom, selección y estilo por estado | hecho, sin aristas todavía |
+| Vista de tabla | hecho |
+| Panel de detalle con estado, metadatos, fuente, abstract e historial | hecho |
+| `Aceptar` / `Descartar…` con motivo obligatorio en un diálogo | hecho |
+| Pantalla de criterios, aviso de re-evaluación y bloque de evaluación | pendiente (Etapas 1–3) |
+
+Capturas del resultado en `docs/capturas/`.

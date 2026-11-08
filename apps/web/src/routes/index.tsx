@@ -5,8 +5,10 @@ import { createBoard } from '../lib/api';
 
 export function IndexPage() {
   const navigate = useNavigate();
-  const [title, setTitle] = useState('Transparencia en research');
-  const [question, setQuestion] = useState('¿Qué evidencia hay sobre la atención en LLMs?');
+  const [title, setTitle] = useState('LLMs en revisiones sistemáticas');
+  const [question, setQuestion] = useState(
+    '¿Qué tan confiable es usar LLMs para cribar estudios en revisiones sistemáticas?',
+  );
 
   const mutation = useMutation({
     mutationFn: () => createBoard(title, question),
@@ -16,31 +18,46 @@ export function IndexPage() {
   });
 
   return (
-    <main className="panel">
-      <h1>Criba</h1>
-      <p className="muted">
-        Tablero de research donde cada nodo conserva su procedencia y cada decisión su motivo.
-      </p>
-      <form
-        className="stack"
-        onSubmit={(event) => {
-          event.preventDefault();
-          mutation.mutate();
-        }}
-      >
-        <label>
-          Título
-          <input value={title} onChange={(event) => setTitle(event.target.value)} required />
-        </label>
-        <label>
-          Pregunta de investigación
-          <input value={question} onChange={(event) => setQuestion(event.target.value)} />
-        </label>
-        <button type="submit" disabled={mutation.isPending}>
-          Crear tablero
-        </button>
-      </form>
-      {mutation.isError ? <p className="error">{mutation.error.message}</p> : null}
-    </main>
+    <div className="cover">
+      <div className="cover-card">
+        <div>
+          <h1>Criba</h1>
+          <p>
+            Un tablero donde cada fuente conserva su procedencia y cada decisión su motivo. La IA
+            sugiere; tú decides.
+          </p>
+        </div>
+
+        <form
+          className="cover-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            mutation.mutate();
+          }}
+        >
+          <div className="field">
+            <label htmlFor="board-title">Título</label>
+            <input
+              id="board-title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="board-question">Pregunta de investigación</label>
+            <textarea
+              id="board-question"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+            />
+          </div>
+          {mutation.isError ? <p className="error">{mutation.error.message}</p> : null}
+          <button type="submit" className="btn primary" disabled={mutation.isPending}>
+            Crear tablero
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

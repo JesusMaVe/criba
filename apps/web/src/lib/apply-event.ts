@@ -24,9 +24,13 @@ export function applyEvent(snapshot: BoardSnapshot, envelope: EventEnvelope): Bo
           kind: payload.nodeKind,
           title: payload.title,
           doi: payload.doi,
+          url: payload.url,
+          abstractText: null,
           venue: payload.venue,
           year: payload.year,
           state: payload.state,
+          x: payload.x,
+          y: payload.y,
         },
       ];
     }

@@ -4,9 +4,13 @@ export type NodeRow = {
   kind: string;
   title: string;
   doi: string | null;
+  url: string | null;
+  abstractText: string | null;
   venue: string | null;
   year: number | null;
   state: string;
+  x: number | null;
+  y: number | null;
 };
 
 export type BoardSnapshot = {
@@ -19,6 +23,15 @@ export type BoardSnapshot = {
     createdAt: string;
   };
   nodes: NodeRow[];
+};
+
+export type DecisionView = {
+  from: string;
+  to: string;
+  reason: string | null;
+  actorId: string;
+  seq: number;
+  decidedAt: string;
 };
 
 export type BoardCreatedPayload = {
@@ -41,6 +54,8 @@ export type NodeCreatedPayload = {
   year: number | null;
   venue: string | null;
   state: string;
+  x: number | null;
+  y: number | null;
 };
 
 export type NodeDecisionMadePayload = {

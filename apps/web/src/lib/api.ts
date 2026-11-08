@@ -1,4 +1,4 @@
-import type { BoardSnapshot, NodeRow } from './types';
+import type { BoardSnapshot, DecisionView, NodeRow } from './types';
 
 const BASE = '/api';
 
@@ -29,6 +29,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const fetchBoard = (boardId: string) => request<BoardSnapshot>(`/boards/${boardId}`);
+
+export const fetchDecisions = (boardId: string, nodeId: string) =>
+  request<DecisionView[]>(`/boards/${boardId}/nodes/${nodeId}/decisions`);
 
 export const createBoard = (title: string, researchQuestion: string) =>
   request<{ id: string }>('/boards', {

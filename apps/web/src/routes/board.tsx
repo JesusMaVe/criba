@@ -1,185 +1,266 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
-import { createNode, decide, fetchBoard, type CreateNodeBody } from '../lib/api';
+import { Canvas } from '../components/canvas';
+import { Modal } from '../components/modal';
+import { NodeDetail, EmptyDetail } from '../components/node-detail';
+import { NodeTable } from '../components/node-table';
+import { Sidebar } from '../components/sidebar';
+import { TopBar } from '../components/top-bar';
+import { createNode, decide, fetchBoard, fetchDecisions, type CreateNodeBody } from '../lib/api';
 import { applyEvent } from '../lib/apply-event';
 import { queryClient } from '../lib/query-client';
 import { subscribeToBoard, type ConnectionStatus } from '../lib/realtime';
 import type { BoardSnapshot } from '../lib/types';
 
-const NEXT_STATES: Record<string, string[]> = {
-  CANDIDATO: ['PRESELECCIONADO', 'DESCARTADO'],
-  PRESELECCIONADO: ['ACEPTADO', 'CANDIDATO', 'DESCARTADO'],
-  ACEPTADO: ['DEFINITIVO', 'PRESELECCIONADO', 'DESCARTADO'],
-  DEFINITIVO: ['ACEPTADO', 'DESCARTADO'],
-  // El servidor solo permite volver al estado del que se salió; aquí se ofrece el abanico
-  // para que el 409 sea visible en lugar de silencioso.
-  DESCARTADO: ['CANDIDATO', 'PRESELECCIONADO', 'ACEPTADO', 'DEFINITIVO'],
-};
+type ViewMode = 'grafo' | 'tabla';
 
 export function BoardPage() {
   const { boardId } = useParams({ from: '/boards/$boardId' });
-  const [status, setStatus] = useState<ConnectionStatus>('conectando');
-  const [actionError, setActionError] = useState<string | null>(null);
-  const boardKey = ['board', boardId] as const;
+  const boardKey = useMemo(() => ['board', boardId] as const, [boardId]);
 
-  const board = useQuery({
-    queryKey: boardKey,
-    queryFn: () => fetchBoard(boardId),
+  const [mode, setMode] = useState<ViewMode>('grafo');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showDiscarded, setShowDiscarded] = useState(false);
+  const [status, setStatus] = useState<ConnectionStatus>('conectando');
+  const [addOpen, setAddOpen] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const board = useQuery({ queryKey: boardKey, queryFn: () => fetchBoard(boardId) });
+
+  const history = useQuery({
+    queryKey: ['decisions', boardId, selectedId],
+    queryFn: () => fetchDecisions(boardId, selectedId as string),
+    enabled: selectedId !== null,
   });
 
-  const subscription = useRef<(() => void) | null>(null);
-
   useEffect(() => {
-    subscription.current = subscribeToBoard(
+    const unsubscribe = subscribeToBoard(
       boardId,
       (envelope) => {
         queryClient.setQueryData<BoardSnapshot>(boardKey, (current) =>
           current ? applyEvent(current, envelope) : current,
         );
+        // El evento no lleva el abstract: se reconcilia con el servidor en segundo plano.
+        if (envelope.payload.kind === 'NodeCreated') {
+          void queryClient.invalidateQueries({ queryKey: boardKey });
+        }
+        if (envelope.payload.kind === 'NodeDecisionMade') {
+          void queryClient.invalidateQueries({ queryKey: ['decisions', boardId] });
+        }
       },
       setStatus,
     );
-    return () => {
-      subscription.current?.();
-      subscription.current = null;
-    };
-  }, [boardId]);
+    return unsubscribe;
+  }, [boardId, boardKey]);
 
   const nodeMutation = useMutation({
     mutationFn: (body: CreateNodeBody) => createNode(boardId, body),
-    onSuccess: () => setActionError(null),
+    onSuccess: () => {
+      setActionError(null);
+      setAddOpen(false);
+    },
     onError: (error: Error) => setActionError(error.message),
   });
 
   const decisionMutation = useMutation({
     mutationFn: (input: { nodeId: string; toState: string; reason?: string }) =>
       decide(boardId, input.nodeId, input.toState, input.reason),
-    onSuccess: () => setActionError(null),
+    onSuccess: () => {
+      setActionError(null);
+      setDiscardOpen(false);
+      void queryClient.invalidateQueries({ queryKey: ['decisions', boardId] });
+    },
     onError: (error: Error) => setActionError(error.message),
   });
 
   if (board.isLoading) {
-    return <main className="panel">Cargando tablero…</main>;
+    return (
+      <div className="cover">
+        <p className="muted">Cargando tablero…</p>
+      </div>
+    );
   }
   if (board.isError || !board.data) {
     return (
-      <main className="panel">
-        <p className="error">{board.error?.message ?? 'Tablero no encontrado'}</p>
-        <Link to="/">Volver</Link>
-      </main>
+      <div className="cover">
+        <div className="cover-card">
+          <h1>No se pudo abrir el tablero</h1>
+          <p className="error">{board.error?.message ?? 'El tablero no existe'}</p>
+          <Link to="/" className="btn">
+            Volver
+          </Link>
+        </div>
+      </div>
     );
   }
 
   const { board: meta, nodes } = board.data;
+  const visible = nodes.filter((node) => showDiscarded || node.state !== 'DESCARTADO');
+  const selected = nodes.find((node) => node.id === selectedId) ?? null;
+
+  const onSubmitNode = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    nodeMutation.mutate({
+      title: String(data.get('title') ?? '').trim(),
+      kind: (String(data.get('kind') ?? 'PAPER') as 'PAPER' | 'WEB'),
+      doi: (String(data.get('doi') ?? '').trim() || null) as string | null,
+      year: data.get('year') ? Number(data.get('year')) : null,
+      venue: (String(data.get('venue') ?? '').trim() || null) as string | null,
+      abstract: (String(data.get('abstract') ?? '').trim() || null) as string | null,
+    });
+  };
 
   return (
-    <main className="panel wide">
-      <header className="board-header">
-        <div>
-          <Link to="/" className="muted">
-            ← Criba
-          </Link>
-          <h1>{meta.title}</h1>
-          <p className="muted">{meta.researchQuestion}</p>
+    <div className="app">
+      <TopBar
+        boardTitle={meta.title}
+        status={status}
+        seq={meta.seq}
+        onAddNode={() => setAddOpen(true)}
+      />
+
+      <div className="workspace">
+        <Sidebar
+          question={meta.researchQuestion}
+          nodes={nodes}
+          showDiscarded={showDiscarded}
+          onToggleDiscarded={() => setShowDiscarded((value) => !value)}
+        />
+
+        <div className="stage">
+          <div className="stage-toolbar">
+            <div className="segmented" role="group" aria-label="Vista">
+              <button type="button" aria-pressed={mode === 'grafo'} onClick={() => setMode('grafo')}>
+                Grafo
+              </button>
+              <button type="button" aria-pressed={mode === 'tabla'} onClick={() => setMode('tabla')}>
+                Tabla
+              </button>
+            </div>
+          </div>
+
+          {mode === 'grafo' ? (
+            <Canvas nodes={visible} selectedId={selectedId} onSelect={setSelectedId} />
+          ) : (
+            <NodeTable nodes={visible} selectedId={selectedId} onSelect={setSelectedId} />
+          )}
         </div>
-        <div className="status">
-          <span className={`dot ${status}`} />
-          {status} · seq {meta.seq}
-        </div>
-      </header>
 
-      <form
-        className="row"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const form = event.currentTarget;
-          const data = new FormData(form);
-          nodeMutation.mutate(
-            {
-              title: String(data.get('title') ?? ''),
-              kind: (String(data.get('kind') ?? 'PAPER') as 'PAPER' | 'WEB'),
-              doi: (String(data.get('doi') ?? '') || null) as string | null,
-              year: data.get('year') ? Number(data.get('year')) : null,
-              venue: (String(data.get('venue') ?? '') || null) as string | null,
-            },
-            { onSuccess: () => form.reset() },
-          );
-        }}
-      >
-        <input name="title" placeholder="Título del paper o página" required />
-        <select name="kind" defaultValue="PAPER">
-          <option value="PAPER">Paper</option>
-          <option value="WEB">Página web</option>
-        </select>
-        <input name="doi" placeholder="DOI (opcional)" />
-        <input name="year" placeholder="Año" type="number" min="1900" max="2100" />
-        <input name="venue" placeholder="Venue" />
-        <button type="submit" disabled={nodeMutation.isPending}>
-          Añadir nodo
-        </button>
-      </form>
+        <aside className="detail">
+          {selected ? (
+            <NodeDetail
+              node={selected}
+              history={history.data}
+              busy={decisionMutation.isPending}
+              error={actionError}
+              onDecide={(toState) =>
+                decisionMutation.mutate({ nodeId: selected.id, toState })
+              }
+              onRequestDiscard={() => setDiscardOpen(true)}
+            />
+          ) : (
+            <EmptyDetail />
+          )}
+        </aside>
+      </div>
 
-      {actionError ? <p className="error">{actionError}</p> : null}
+      {addOpen ? (
+        <Modal
+          title="Añadir nodo a mano"
+          description="Mientras no exista el buscador, los nodos se crean a mano. La deduplicación por DOI ya funciona."
+          onClose={() => setAddOpen(false)}
+        >
+          <form className="cover-form" onSubmit={onSubmitNode}>
+            <div className="field">
+              <label htmlFor="node-title">Título</label>
+              <input id="node-title" name="title" required autoFocus />
+            </div>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="node-kind">Tipo</label>
+                <select id="node-kind" name="kind" defaultValue="PAPER">
+                  <option value="PAPER">Artículo</option>
+                  <option value="WEB">Página web</option>
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="node-year">Año</label>
+                <input id="node-year" name="year" type="number" min="1900" max="2100" />
+              </div>
+              <div className="field">
+                <label htmlFor="node-doi">DOI</label>
+                <input id="node-doi" name="doi" placeholder="10.1000/xyz" />
+              </div>
+              <div className="field">
+                <label htmlFor="node-venue">Venue</label>
+                <input id="node-venue" name="venue" />
+              </div>
+              <div className="field full">
+                <label htmlFor="node-abstract">Abstract</label>
+                <textarea id="node-abstract" name="abstract" />
+              </div>
+            </div>
+            {actionError ? <p className="error">{actionError}</p> : null}
+            <div className="modal-actions">
+              <button type="button" className="btn" onClick={() => setAddOpen(false)}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn primary" disabled={nodeMutation.isPending}>
+                Añadir nodo
+              </button>
+            </div>
+          </form>
+        </Modal>
+      ) : null}
 
-      <table className="nodes">
-        <thead>
-          <tr>
-            <th>Título</th>
-            <th>Kind</th>
-            <th>Año</th>
-            <th>Venue</th>
-            <th>Estado</th>
-            <th>Decidir</th>
-          </tr>
-        </thead>
-        <tbody>
-          {nodes.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="muted">
-                Todavía no hay nodos. Añade uno y míralo aparecer en la otra pestaña.
-              </td>
-            </tr>
-          ) : null}
-          {nodes.map((node) => (
-            <tr key={node.id}>
-              <td>
-                {node.title}
-                {node.doi ? <span className="muted"> · {node.doi}</span> : null}
-              </td>
-              <td>{node.kind}</td>
-              <td>{node.year ?? '—'}</td>
-              <td>{node.venue ?? '—'}</td>
-              <td>
-                <span className={`state state-${node.state.toLowerCase()}`}>{node.state}</span>
-              </td>
-              <td className="actions">
-                {(NEXT_STATES[node.state] ?? []).map((target) => (
-                  <button
-                    key={target}
-                    type="button"
-                    disabled={decisionMutation.isPending}
-                    onClick={() => {
-                      if (target === 'DESCARTADO') {
-                        const reason = window.prompt('Motivo del descarte (obligatorio):') ?? '';
-                        if (!reason.trim()) {
-                          setActionError('Descartar un nodo exige un motivo');
-                          return;
-                        }
-                        decisionMutation.mutate({ nodeId: node.id, toState: target, reason });
-                        return;
-                      }
-                      decisionMutation.mutate({ nodeId: node.id, toState: target });
-                    }}
-                  >
-                    {target}
-                  </button>
-                ))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </main>
+      {discardOpen && selected ? (
+        <Modal
+          title="Descartar nodo"
+          description="El motivo queda en el historial y la decisión es reversible."
+          onClose={() => setDiscardOpen(false)}
+        >
+          <form
+            className="cover-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const reason = String(new FormData(event.currentTarget).get('reason') ?? '').trim();
+              if (!reason) {
+                setActionError('Descartar un nodo exige un motivo');
+                return;
+              }
+              decisionMutation.mutate({
+                nodeId: selected.id,
+                toState: 'DESCARTADO',
+                reason,
+              });
+            }}
+          >
+            <div className="field">
+              <label htmlFor="reason">Motivo</label>
+              <textarea
+                id="reason"
+                name="reason"
+                required
+                autoFocus
+                placeholder="No usa un dataset público; el método no es replicable…"
+              />
+            </div>
+            {actionError ? <p className="error">{actionError}</p> : null}
+            <div className="modal-actions">
+              <button type="button" className="btn" onClick={() => setDiscardOpen(false)}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn primary" disabled={decisionMutation.isPending}>
+                Descartar
+              </button>
+            </div>
+          </form>
+        </Modal>
+      ) : null}
+    </div>
   );
 }
