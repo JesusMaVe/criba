@@ -1,0 +1,31 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!mvnw
+!**/.mvn/wrapper/*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+*.launch
+
+# Node
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Logs y temporales
+*.log
+logs/
+.DS_Store
