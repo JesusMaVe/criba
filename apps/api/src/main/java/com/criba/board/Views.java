@@ -25,6 +25,8 @@ public final class Views {
             String kind,
             String title,
             String doi,
+            String url,
+            String abstractText,
             String venue,
             Integer year,
             String state,
@@ -33,11 +35,22 @@ public final class Views {
 
         static NodeView of(Node node) {
             return new NodeView(node.id(), node.boardId(), node.kind().name(), node.title(), node.doi(),
-                    node.venue(), node.year(), node.state().name(), node.x(), node.y());
+                    node.url(), node.abstractText(), node.venue(), node.year(), node.state().name(),
+                    node.x(), node.y());
         }
     }
 
     public record BoardSnapshot(BoardView board, List<NodeView> nodes) {
+    }
+
+    /** Una decisión pasada, tal como quedó en la auditoría. */
+    public record DecisionView(
+            String from, String to, String reason, String actorId, long seq, Instant decidedAt) {
+
+        static DecisionView of(Decision decision) {
+            return new DecisionView(decision.from().name(), decision.to().name(), decision.reason(),
+                    decision.actorId(), decision.seq(), decision.decidedAt());
+        }
     }
 
     /** Respuesta a una decisión: la secuencia permite al cliente saber si su evento ya llegó. */

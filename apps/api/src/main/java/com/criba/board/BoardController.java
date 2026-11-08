@@ -46,6 +46,11 @@ class BoardController {
         return service.addNode(boardId, request, correlationId(correlationId));
     }
 
+    @GetMapping("/{boardId}/nodes/{nodeId}/decisions")
+    java.util.List<Views.DecisionView> decisions(@PathVariable UUID boardId, @PathVariable UUID nodeId) {
+        return service.decisions(boardId, nodeId);
+    }
+
     @PostMapping("/{boardId}/nodes/{nodeId}/decisions")
     Views.DecisionResult decide(
             @PathVariable UUID boardId,

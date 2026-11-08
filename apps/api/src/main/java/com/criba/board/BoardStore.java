@@ -154,6 +154,13 @@ class BoardStore {
                 .list();
     }
 
+    long countNodes(UUID boardId) {
+        return jdbc.sql("select count(*) from node where board_id = :boardId")
+                .param("boardId", boardId)
+                .query(Long.class)
+                .single();
+    }
+
     void updateNodeState(UUID nodeId, NodeState state) {
         jdbc.sql("update node set state = :state where id = :id")
                 .param("state", state.name())
@@ -180,6 +187,13 @@ class BoardStore {
                 .param("seq", decision.seq())
                 .param("decidedAt", OffsetDateTime.ofInstant(decision.decidedAt(), java.time.ZoneOffset.UTC))
                 .update();
+    }
+
+    List<Decision> listDecisions(UUID nodeId) {
+        return jdbc.sql("select * from node_decision where node_id = :nodeId order by seq desc")
+                .param("nodeId", nodeId)
+                .query(DECISION_MAPPER)
+                .list();
     }
 
     Optional<Decision> findLastDecision(UUID nodeId) {

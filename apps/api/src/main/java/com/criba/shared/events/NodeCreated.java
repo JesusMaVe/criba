@@ -12,5 +12,7 @@ public record NodeCreated(
         String url,
         Integer year,
         String venue,
-        String state) implements DomainEvent {
+        String state,
+        Double x,
+        Double y) implements DomainEvent {
 }

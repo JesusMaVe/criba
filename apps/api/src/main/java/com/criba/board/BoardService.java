@@ -60,16 +60,24 @@ public class BoardService {
             throw new BoardException.Duplicate(existing.get().id());
         }
 
+        // Posición inicial determinista, en zigzag de dos columnas. El layout de verdad
+        // (grafo de citas) llega con views en la Etapa 5; aquí solo hace falta que no se solapen.
+        int index = (int) store.countNodes(boardId);
+        int column = index % 2;
+        int row = index / 2;
+        double x = 150 + column * 300 + (row % 3) * 16;
+        double y = 110 + row * 205 + (column == 1 ? 44 : 0);
+
         NodeKind kind = parseKind(request.kind());
         Node node = new Node(UUID.randomUUID(), boardId, kind, naturalKey, request.doi(),
                 request.openalexId(), request.url(), request.title(), request.abstractText(),
-                request.year(), request.venue(), NodeState.CANDIDATO, null, null, Instant.now());
+                request.year(), request.venue(), NodeState.CANDIDATO, x, y, Instant.now());
         store.insertNode(node);
 
         long seq = store.nextSeq(boardId);
         events.publishEvent(EventEnvelope.of(
                 new NodeCreated(node.id(), kind.name(), node.title(), node.doi(), node.openalexId(),
-                        node.url(), node.year(), node.venue(), node.state().name()),
+                        node.url(), node.year(), node.venue(), node.state().name(), node.x(), node.y()),
                 boardId, seq, actor, correlationId, null));
 
         return Views.NodeView.of(node);
@@ -117,6 +125,14 @@ public class BoardService {
                 boardId, seq, actor, correlationId, null));
 
         return new Views.DecisionResult(seq, Views.NodeView.of(node.withState(target)));
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<Views.DecisionView> decisions(UUID boardId, UUID nodeId) {
+        requireBoard(boardId);
+        store.findNode(boardId, nodeId)
+                .orElseThrow(() -> new BoardException.NotFound("nodo", nodeId));
+        return store.listDecisions(nodeId).stream().map(Views.DecisionView::of).toList();
     }
 
     @Transactional(readOnly = true)
