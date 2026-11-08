@@ -75,7 +75,7 @@ export function NodeDetail({
       <section>
         <p className="section-label">La IA sugiere</p>
         <div className="placeholder">
-          Sin evaluar todavía. El agente llega en la Etapa 2 y sus respuestas a tus criterios
+          Sin evaluar todavía. El evaluador llega en la Etapa 3 y sus respuestas a tus criterios
           aparecerán aquí, con el fragmento del abstract que las sostiene.
         </div>
       </section>

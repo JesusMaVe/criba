@@ -7,7 +7,7 @@ procedencia, y cada decisión de aceptarlo o descartarlo queda registrada con su
 
 ## Estado
 
-**Etapa 0 completa.** El esqueleto caminante funciona de punta a punta: comando por REST →
+**Etapa 1 (Esqueleto) completa.** El plan por etapas vive en [`docs/ETAPAS.md`](docs/ETAPAS.md). El circuito funciona de punta a punta: comando por REST →
 transacción en PostgreSQL → evento externalizado a Kafka → hecho reenviado por WebSocket → tablero
 actualizado en otra pestaña, con la interfaz ya vestida según `docs/DISENO.md`.
 
@@ -23,6 +23,7 @@ compose.yaml    PostgreSQL 18 + Kafka 4.3 (KRaft, un nodo)
 docs/
   Arquitectura — App de research transparente con IA (Java + Kafka).md   el qué y el por qué
   PROPUESTA-ARQUITECTURA.md                                              el cómo y el estado
+  ETAPAS.md                                                              el plan por etapas y qué está hecho
   DISENO.md                                                              tokens y estructura de la interfaz
   diseno/                                                                pantallas de referencia
   capturas/                                                              cómo se ve la etapa 0
@@ -106,6 +107,7 @@ cd apps/web && pnpm typecheck && pnpm build
 
 ## Documentación
 
+- `docs/ETAPAS.md` — qué se construye en cada etapa y en qué orden; única fuente de verdad.
 - `docs/Arquitectura …md` — propuesta de valor, conceptos de dominio, ADR 1–12.
 - `docs/PROPUESTA-ARQUITECTURA.md` — arquitectura de arranque: tres planos, entrega at-least-once,
   control del gasto, etapas y ADR 13–23.

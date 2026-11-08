@@ -366,23 +366,17 @@ Estados de `operation`: `PLANNED` → `APPROVED` → `RUNNING` → `COMPLETED`, 
 
 ## 9. Etapas
 
-| Etapa | Qué se construye | Qué prueba de verdad |
-| --- | --- | --- |
-| **0** | `criba-api`: compose, esquema, envelope, `board`, STOMP, página con dos botones | que el esquema de eventos y la sincronización por WebSocket son ciertos |
-| **0.5** | `criba-agents` en esqueleto: consume `agent.tasks`, deduplica en `processed_event`, no hace nada, hace ack | consumer groups, offsets, rebalanceo, deduplicación. ~150 líneas que **no se tiran**: es el worker real sin lógica |
-| **1** | `board-canvas` SVG, criterios duros vN, heatmap | el lienzo aguanta cientos de nodos |
-| **2** | worker real: planificador + OpenAlex, tareas desde la API, aprobación con `maxUsd`/`maxNodes`, **presupuestos, barredor y `PAUSED_BUDGET`** | el flujo completo con dinero de por medio (§4) |
-| **3** | evaluador con evidencia validada, re-evaluación por versión de criterios, exportación BibTeX/RIS | que la transparencia se sostiene con un LLM real |
+El plan por etapas vive en **[`ETAPAS.md`](ETAPAS.md)**, que es la única fuente de verdad sobre la
+numeración. Aquí solo queda lo que la arquitectura condiciona:
 
-La Etapa 0.5 existe porque es la forma más barata de que el lado del consumidor sea real esta semana en lugar de en la Etapa 2, y el código sobrevive porque el esqueleto del worker es el worker.
-
-**Definición de hecho de la Etapa 0** (verificable en una sesión):
-
-1. `docker compose up` levanta Postgres 18 y Kafka 4.3 y la API conecta.
-2. `POST /api/boards/{id}/nodes` responde 201 y `kcat -C -t board.events` muestra el evento con la forma final: envelope, `seq`, `actor`, `schemaVersion`.
-3. Dos pestañas: un cambio de estado en una aparece en la otra en menos de un segundo, y un `seq` repetido se descarta.
-4. `POST .../decisions` sin `reason` devuelve 422 y no escribe nada.
-5. `ApplicationModules.verify()` pasa y hay un `@ApplicationModuleTest` por transición.
+- **Etapa 1 (Esqueleto)** — completada. El circuito comando → Postgres → Kafka → WebSocket está
+  verificado con dos pestañas reales.
+- **Etapa 2 (Agente buscador)** — se construye en tres cortes: el consumidor esqueleto (`2.1`), el
+  planificador con OpenAlex (`2.2`) y la aprobación con presupuestos (`2.3`, §4 de este documento).
+  El primer corte es el que hace real el lado del consumidor de Kafka.
+- **Etapa 3 (Criterios y evaluación)** — depende de dos decisiones que siguen abiertas: la escala de
+  respuesta (`Sí` / `Parcial` / `No` frente a 0–1) y si la sugerencia la calcula el código a partir
+  de la importancia de cada criterio (`DISENO.md` §Decisiones).
 
 ---
 

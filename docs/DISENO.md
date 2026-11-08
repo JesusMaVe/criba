@@ -89,7 +89,7 @@ Cada tarjeta lleva su icono de estado junto a la etiqueta, el título en negrita
    mismo criterio: nodos no descartados, o no descartados y no definitivos. Hoy el diseño usa 26 en
    dos sitios y la barra lateral suma 29.
 
-## Implementado en la Etapa 0
+## Implementado en la Etapa 1
 
 | Pieza | Estado |
 | --- | --- |
@@ -99,6 +99,6 @@ Cada tarjeta lleva su icono de estado junto a la etiqueta, el título en negrita
 | Vista de tabla | hecho |
 | Panel de detalle con estado, metadatos, fuente, abstract e historial | hecho |
 | `Aceptar` / `Descartar…` con motivo obligatorio en un diálogo | hecho |
-| Pantalla de criterios, aviso de re-evaluación y bloque de evaluación | pendiente (Etapas 1–3) |
+| Pantalla de criterios, aviso de re-evaluación y bloque de evaluación | pendiente (Etapas 2 y 3) |
 
 Capturas del resultado en `docs/capturas/`.

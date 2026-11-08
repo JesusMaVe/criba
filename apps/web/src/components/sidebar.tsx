@@ -57,7 +57,7 @@ export function Sidebar({
           type="button"
           className="btn block"
           disabled
-          title="Los criterios versionados llegan en la Etapa 1"
+          title="Los criterios versionados llegan en la Etapa 3"
         >
           <span>Criterios</span>
           <span className="arrow">sin definir</span>
