@@ -1,0 +1,45 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: criba-api
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5433/criba
+    username: criba
+    password: criba
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+  modulith:
+    events:
+      # Las publicaciones completadas se borran: la tabla no crece sin techo.
+      completion-mode: delete
+      externalization:
+        # Preserva el orden de los eventos de un mismo tablero al externalizar.
+        serialize-externalization: true
+      jdbc:
+        schema-initialization:
+          # Solo en local. En cualquier otro perfil, Flyway es la única dueña del esquema.
+          enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    org.apache.kafka: warn
+    org.springframework.kafka: warn

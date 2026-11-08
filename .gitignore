@@ -29,3 +29,12 @@ dist/
 *.log
 logs/
 .DS_Store
+
+# Java / IDE extras
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+*.iws
+*.ipr
+nbproject/
