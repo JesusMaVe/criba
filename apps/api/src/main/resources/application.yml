@@ -21,6 +21,14 @@ spring:
       # Modulith ya entrega el evento serializado a JSON (bytes): aquí no se vuelve a serializar.
       # Con JsonSerializer el evento salía envuelto en base64.
       value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+    consumer:
+      # Sin esto, un grupo nuevo empieza al final y pierde las propuestas ya publicadas.
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: record
   modulith:
     events:
       # Las publicaciones completadas se borran: la tabla no crece sin techo.

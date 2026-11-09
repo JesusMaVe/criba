@@ -47,6 +47,12 @@ class ApiExceptionHandler {
                 .body(new ApiError("MISSING_REASON", e.getMessage(), Map.of("field", "reason")));
     }
 
+    @ExceptionHandler(BoardException.MissingQuery.class)
+    ResponseEntity<ApiError> missingQuery(BoardException.MissingQuery e) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ApiError("MISSING_QUERY", e.getMessage(), Map.of("field", "query")));
+    }
+
     @ExceptionHandler(BoardException.UnknownState.class)
     ResponseEntity<ApiError> unknownState(BoardException.UnknownState e) {
         return ResponseEntity.badRequest()

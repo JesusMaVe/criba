@@ -83,6 +83,13 @@ public class BoardService {
         return Views.NodeView.of(node);
     }
 
+    /** Crea el nodo que propone un agente. Vacío si el tablero no existe o el nodo ya está. */
+    @Transactional
+    public Optional<Views.NodeView> addProposedNode(UUID boardId, Requests.CreateNode request, Actor actor,
+            UUID correlationId, UUID causationId) {
+        throw new UnsupportedOperationException("por implementar");
+    }
+
     @Transactional
     public Views.DecisionResult decide(
             UUID boardId, UUID nodeId, Requests.Decision request, UUID correlationId) {

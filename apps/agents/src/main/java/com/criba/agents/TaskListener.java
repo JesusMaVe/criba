@@ -25,10 +25,12 @@ class TaskListener {
 
     private final ProcessedEvents processedEvents;
     private final JsonMapper json;
+    private final SearchTaskHandler searchTasks;
 
-    TaskListener(ProcessedEvents processedEvents, JsonMapper json) {
+    TaskListener(ProcessedEvents processedEvents, JsonMapper json, SearchTaskHandler searchTasks) {
         this.processedEvents = processedEvents;
         this.json = json;
+        this.searchTasks = searchTasks;
     }
 
     @KafkaListener(topics = KafkaConfiguration.AGENT_TASKS, groupId = CONSUMER)

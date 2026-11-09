@@ -13,11 +13,24 @@ import org.springframework.util.backoff.FixedBackOff;
 class KafkaConfiguration {
 
     static final String AGENT_TASKS = "agent.tasks";
+    static final String AGENT_RESULTS = "agent.results";
 
     /** Clave {@code board_id}: las tareas de un tablero caen en la misma partición y en orden. */
     @Bean
     NewTopic agentTasksTopic() {
         return TopicBuilder.name(AGENT_TASKS)
+                .partitions(6)
+                .replicas(1)
+                .config(TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE)
+                .config(TopicConfig.RETENTION_MS_CONFIG,
+                        Long.toString(Duration.ofDays(7).toMillis()))
+                .build();
+    }
+
+    /** Clave {@code board_id}: las propuestas de un tablero llegan a la API en orden. */
+    @Bean
+    NewTopic agentResultsTopic() {
+        return TopicBuilder.name(AGENT_RESULTS)
                 .partitions(6)
                 .replicas(1)
                 .config(TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE)
