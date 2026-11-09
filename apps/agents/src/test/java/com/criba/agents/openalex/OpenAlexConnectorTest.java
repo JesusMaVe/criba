@@ -119,7 +119,7 @@ class OpenAlexConnectorTest {
                  "abstract_inverted_index":{"Dos":[0],"palabras":[1]}}
                 """);
 
-        OpenAlexSearch search = connector().search("revisiones", 50);
+        OpenAlexSearch search = connector().search("revisiones", 1);
 
         assertEquals(List.of(new OpenAlexWork("W2095601341", "10.1186/2046-4053-3-74",
                 "https://doi.org/10.1186/2046-4053-3-74", "Systematic review automation technologies",
@@ -225,8 +225,8 @@ class OpenAlexConnectorTest {
                 {"id":"https://openalex.org/W999","doi":"https://doi.org/10.1/1","title":"Copia"}
                 """;
         String[] primera = works(1, 100);
-        ok(300, primera);
-        ok(300, repetido, work(101));
+        ok(200, primera);
+        ok(200, repetido, work(101));
 
         OpenAlexSearch search = connector().search("q", 200);
 
