@@ -83,15 +83,15 @@ nodo en una; la otra se actualiza en menos de un segundo.
 
 ## Lanzar una búsqueda
 
-Con la API y el worker arrancados, y el tablero abierto en el navegador:
+Con la API y el worker arrancados, usa `Nueva búsqueda` en la barra lateral del tablero. Los nodos
+aparecen como candidatos conforme llegan. También se puede lanzar por API:
 
 ```bash
 curl -s -X POST localhost:8081/api/boards/<boardId>/searches \
   -H 'Content-Type: application/json' -d '{"query":"systematic review automation"}'
 ```
 
-Responde 202 y los nodos aparecen como candidatos conforme llegan. Sin `query` se busca la pregunta
-del tablero tal cual. OpenAlex exige coincidencia en título o abstract, así que una pregunta larga
+Sin `query` se busca la pregunta del tablero tal cual. OpenAlex exige coincidencia en título o abstract, así que una pregunta larga
 puede no devolver nada: conviene usar términos concretos y en inglés.
 
 ## Comprobar el consumidor

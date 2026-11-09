@@ -59,3 +59,11 @@ export const decide = (boardId: string, nodeId: string, toState: string, reason?
     method: 'POST',
     body: JSON.stringify({ toState, reason: reason ?? null }),
   });
+
+export type SearchAccepted = { searchId: string; query: string };
+
+export const startSearch = (boardId: string, query: string) =>
+  request<SearchAccepted>(`/boards/${boardId}/searches`, {
+    method: 'POST',
+    body: JSON.stringify({ query: query.trim() || null }),
+  });
