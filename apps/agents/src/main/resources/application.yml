@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: criba-agents
+  main:
+    # Es un consumidor: no atiende HTTP y lo mantienen vivo los hilos del listener.
+    web-application-type: none
+  datasource:
+    url: jdbc:postgresql://localhost:5433/criba
+    username: criba
+    password: criba
+  flyway:
+    enabled: true
+    # Esquema propio: la API es la única escritora del suyo.
+    schemas: agents
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      # Sin esto, un grupo nuevo empieza al final y pierde las tareas ya publicadas.
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      # El offset se confirma registro a registro, después de que el listener termina.
+      ack-mode: record
+
+logging:
+  level:
+    org.apache.kafka: warn
+    # Se deja en info para ver las asignaciones de particiones en cada rebalanceo.
+    org.springframework.kafka: info

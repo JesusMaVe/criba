@@ -350,6 +350,7 @@ Dos esquemas en la misma instancia de PostgreSQL: `criba` (API) y `agents` (work
 | criba | `processed_event` | nueva: (`consumer`, `event_id`), PK compuesta | hay consumidores reales (§3, §5) |
 | criba | `event_publication` | la crea Modulith; `completion-mode=DELETE` + purga | no crece sin techo |
 | criba | `outbox`, `board_event_log` | **no se crean** | las reemplaza Modulith y las tablas de auditoría |
+| agents | `processed_event` | nueva: (`consumer`, `event_id`), PK compuesta | el worker deduplica en su propio esquema (§3, §5) |
 | agents | `llm_attempt` | nueva: `operation_id`, `node_id`, `criteria_version`, `attempt`, `status`, `day`, `reserved_usd`, `spent_usd`, `provider_request_id`, `price_version` | idempotencia y reserva por intento; `day` es lo que permite cuadrar con el presupuesto diario |
 | agents | `operation_budget` | nueva: `approved_usd`, `spent`, `reserved` | límite de la operación (§4.4) |
 | agents | `key_daily_budget` | nueva: (`credential_id`, `day`) PK, `limit_usd`, `spent`, `reserved` | límite diario por key (§4.4) |
