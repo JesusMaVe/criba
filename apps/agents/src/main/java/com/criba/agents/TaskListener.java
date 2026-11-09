@@ -10,16 +10,21 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Consume {@code agent.tasks}, deduplica y confirma. Todavía no ejecuta ninguna tarea.
+ * Consume {@code agent.tasks}, deduplica y ejecuta las búsquedas.
  *
  * <p>El offset se confirma al volver de este método ({@code ack-mode: record}). Un fallo de la base
  * se propaga para reintentar; un registro ilegible no mejora con reintentos, así que se registra y
  * se confirma para no bloquear la partición.
+ *
+ * <p>El evento se marca antes de buscar, y eso hace la búsqueda at-most-once: si el proceso muere a
+ * medias se pierde, pero nunca se paga dos veces (ADR 15). Relanzarla es seguro porque la API
+ * deduplica los nodos.
  */
 @Component
 class TaskListener {
 
     static final String CONSUMER = "agents";
+    private static final String SEARCH_REQUESTED = "SearchRequested";
 
     private static final Logger log = LoggerFactory.getLogger(TaskListener.class);
 
@@ -46,6 +51,9 @@ class TaskListener {
         log.info("{}: tipo={} evento={} tablero={} partición={} offset={}",
                 firstTime ? "Tarea nueva" : "Duplicado ignorado",
                 task.type(), task.eventId(), task.boardId(), record.partition(), record.offset());
+        if (firstTime && SEARCH_REQUESTED.equals(task.type())) {
+            searchTasks.handle(task);
+        }
     }
 
     private Optional<TaskEnvelope> parse(String value) {

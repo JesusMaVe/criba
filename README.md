@@ -11,8 +11,9 @@ procedencia, y cada decisión de aceptarlo o descartarlo queda registrada con su
 transacción en PostgreSQL → evento externalizado a Kafka → hecho reenviado por WebSocket → tablero
 actualizado en otra pestaña, con la interfaz ya vestida según `docs/DISENO.md`.
 
-**Etapa 2 (Agente buscador) en curso.** El corte 2.1 está completo: `criba-agents` consume
-`agent.tasks` y deduplica, todavía sin ejecutar ninguna tarea.
+**Etapa 2 (Agente buscador) en curso.** Una búsqueda ya llega de punta a punta: la API la encarga,
+`criba-agents` consulta OpenAlex y los nodos aparecen en el tablero, deduplicados. Faltan el
+planificador con LLM y la aprobación con presupuestos.
 
 ![Tablero](docs/capturas/etapa-0-tablero.png)
 
@@ -21,7 +22,7 @@ actualizado en otra pestaña, con la interfaz ya vestida según `docs/DISENO.md`
 ```
 apps/
   api/          Spring Boot 4.1 — monolito modular (Spring Modulith 2.1)
-  agents/       Worker Spring Boot 4.1: consumidor de agent.tasks
+  agents/       Worker Spring Boot 4.1: ejecuta las tareas de agent.tasks
   web/          SPA TanStack Router + Query
 compose.yaml    PostgreSQL 18 + Kafka 4.3 (KRaft, un nodo)
 docs/
@@ -79,6 +80,19 @@ cd apps/web && node scripts/check-realtime.mjs <boardId>
 
 En el navegador: abre `http://localhost:5173/boards/<boardId>` en dos pestañas y crea o mueve un
 nodo en una; la otra se actualiza en menos de un segundo.
+
+## Lanzar una búsqueda
+
+Con la API y el worker arrancados, y el tablero abierto en el navegador:
+
+```bash
+curl -s -X POST localhost:8081/api/boards/<boardId>/searches \
+  -H 'Content-Type: application/json' -d '{"query":"systematic review automation"}'
+```
+
+Responde 202 y los nodos aparecen como candidatos conforme llegan. Sin `query` se busca la pregunta
+del tablero tal cual. OpenAlex exige coincidencia en título o abstract, así que una pregunta larga
+puede no devolver nada: conviene usar términos concretos y en inglés.
 
 ## Comprobar el consumidor
 
