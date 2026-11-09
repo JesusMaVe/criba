@@ -24,6 +24,14 @@ spring:
       # El offset se confirma registro a registro, después de que el listener termina.
       ack-mode: record
 
+criba:
+  openalex:
+    base-url: https://api.openalex.org
+    # Opcional. Sin ella se comparte el presupuesto gratuito de la IP y hay más 429.
+    api-key: ${OPENALEX_API_KEY:}
+    # OpenAlex admite 10 por segundo sin key; se deja margen.
+    requests-per-second: 8
+
 logging:
   level:
     org.apache.kafka: warn

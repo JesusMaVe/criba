@@ -48,6 +48,9 @@ cd apps/web  && pnpm install && pnpm dev # interfaz en http://localhost:5173
 cd apps/agents && ./mvnw spring-boot:run # worker, sin puerto HTTP
 ```
 
+`OPENALEX_API_KEY` es opcional: sin ella el worker comparte el presupuesto gratuito de tu IP ($0.10
+al día) y recibe más `429`. Se saca gratis en <https://openalex.org/settings/api>.
+
 Los puertos no son los de fábrica a propósito: **5433** porque el 5432 suele estar ocupado por otro
 proyecto, y **8081** por la misma razón con el 8080.
 
