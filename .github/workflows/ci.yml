@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  java:
+    name: ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [api, agents]
+    defaults:
+      run:
+        working-directory: apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+          cache-dependency-path: apps/${{ matrix.app }}/pom.xml
+      # Pruebas con PostgreSQL y Kafka reales (Testcontainers) y umbrales de cobertura.
+      - run: ./mvnw -B verify
+
+  web:
+    name: web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  pruebas-incluidas:
+    name: pruebas incluidas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: .github/scripts/exige-pruebas.sh "$BASE_SHA" HEAD
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
+  # La única comprobación obligatoria en GitHub: agregar un job nuevo no exige tocar la protección.
+  puerta:
+    name: puerta
+    if: always()
+    needs: [java, web, pruebas-incluidas]
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "$RESULTADOS" = "success success success"
+        env:
+          RESULTADOS: ${{ needs.java.result }} ${{ needs.web.result }} ${{ needs.pruebas-incluidas.result }}

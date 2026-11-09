@@ -411,7 +411,7 @@ numeración. Aquí solo queda lo que la arquitectura condiciona:
 **Pendiente, y conviene decidirlo antes de la Etapa 2:**
 
 1. **Valor por defecto del límite diario.** Propongo **$2.00** con mínimo $0.50: cubre varias decenas de evaluaciones con un modelo pequeño y evita que un bucle descontrolado llegue a una factura que duela. Que ningún número sea invisible: el diálogo de aprobación muestra el límite, lo gastado y lo que quedaría.
-2. **`max_tokens` por tipo de llamada y `max_nodes` por operación por defecto.** Son los dos números que traducen "cuánto puede costar" a "cuánto reservo"; si quedan en el aire, el estimado no sirve.
+2. **`max_tokens` por tipo de llamada** (`max_nodes` por operación ya está decidido: **50** por defecto). Son los dos números que traducen "cuánto puede costar" a "cuánto reservo"; si quedan en el aire, el estimado no sirve.
 3. **Contra qué proveedor desarrollas.** No cambia la arquitectura, pero sí los fallos que vas a probar. Elige el que tenga modo estricto de esquema, no el más cómodo.
 
 ---

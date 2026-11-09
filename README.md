@@ -97,10 +97,10 @@ docker exec criba-kafka /opt/kafka/bin/kafka-consumer-groups.sh \
 ## Pruebas
 
 ```bash
-cd apps/api && ./mvnw test     # máquina de estados, claves naturales, modularidad y el módulo board
-                               # con PostgreSQL y Kafka reales (Testcontainers)
-cd apps/agents && ./mvnw test  # deduplicación, offsets y fallos, con PostgreSQL y Kafka reales
-cd apps/web && pnpm typecheck && pnpm build
+cd apps/api && ./mvnw verify     # máquina de estados, claves naturales, modularidad y el módulo board
+                                 # con PostgreSQL y Kafka reales (Testcontainers), más cobertura
+cd apps/agents && ./mvnw verify  # deduplicación, offsets y fallos, con PostgreSQL y Kafka reales
+cd apps/web && pnpm typecheck && pnpm test && pnpm build
 ```
 
 ## Reglas del repositorio
@@ -112,6 +112,8 @@ cd apps/web && pnpm typecheck && pnpm build
 3. **Toda llamada que gasta la key del usuario reserva su peor caso antes de hacerse**, contra el
    presupuesto de la operación y el diario de la key (ver §4 de la propuesta).
 4. Commits en imperativo y con alcance: `feat(board): registra decisiones con motivo obligatorio`.
+5. **Todo cambio entra a `main` por pull request y con las pruebas en verde**, desarrollado con TDD
+   (ver [`CONTRIBUTING.md`](CONTRIBUTING.md)).
 
 ## Notas técnicas que cuestan una tarde si se descubren tarde
 
