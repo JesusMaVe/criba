@@ -314,7 +314,7 @@ export function Canvas({
       </svg>
 
       <div className="stage-footer">
-        Los nodos se añaden a mano; las citas entre fuentes llegan después
+        Las citas entre fuentes llegan después
       </div>
       <div className="zoom">
         <button type="button" aria-label="Alejar" onClick={() => zoomBy(1 / 1.2)}>

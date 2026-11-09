@@ -99,6 +99,7 @@ Cada tarjeta lleva su icono de estado junto a la etiqueta, el título en negrita
 | Vista de tabla | hecho |
 | Panel de detalle con estado, metadatos, fuente, abstract e historial | hecho |
 | `Aceptar` / `Descartar…` con motivo obligatorio en un diálogo | hecho |
+| `Nueva búsqueda` con su diálogo y aviso de búsqueda en curso | hecho (Etapa 2) |
 | Pantalla de criterios, aviso de re-evaluación y bloque de evaluación | pendiente (Etapas 2 y 3) |
 
 Capturas del resultado en `docs/capturas/`.

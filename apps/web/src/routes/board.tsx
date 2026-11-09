@@ -5,9 +5,17 @@ import { Canvas } from '../components/canvas';
 import { Modal } from '../components/modal';
 import { NodeDetail, EmptyDetail } from '../components/node-detail';
 import { NodeTable } from '../components/node-table';
+import { SearchDialog } from '../components/search-dialog';
 import { Sidebar } from '../components/sidebar';
 import { TopBar } from '../components/top-bar';
-import { createNode, decide, fetchBoard, fetchDecisions, type CreateNodeBody } from '../lib/api';
+import {
+  createNode,
+  decide,
+  fetchBoard,
+  fetchDecisions,
+  startSearch,
+  type CreateNodeBody,
+} from '../lib/api';
 import { applyEvent } from '../lib/apply-event';
 import { queryClient } from '../lib/query-client';
 import { subscribeToBoard, type ConnectionStatus } from '../lib/realtime';
@@ -25,6 +33,8 @@ export function BoardPage() {
   const [status, setStatus] = useState<ConnectionStatus>('conectando');
   const [addOpen, setAddOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searching, setSearching] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const board = useQuery({ queryKey: boardKey, queryFn: () => fetchBoard(boardId) });
@@ -45,6 +55,7 @@ export function BoardPage() {
         // El evento no lleva el abstract: se reconcilia con el servidor en segundo plano.
         if (envelope.payload.kind === 'NodeCreated') {
           void queryClient.invalidateQueries({ queryKey: boardKey });
+          if (envelope.actor.type === 'AGENT') setSearching(null);
         }
         if (envelope.payload.kind === 'NodeDecisionMade') {
           void queryClient.invalidateQueries({ queryKey: ['decisions', boardId] });
@@ -60,6 +71,16 @@ export function BoardPage() {
     onSuccess: () => {
       setActionError(null);
       setAddOpen(false);
+    },
+    onError: (error: Error) => setActionError(error.message),
+  });
+
+  const searchMutation = useMutation({
+    mutationFn: (query: string) => startSearch(boardId, query),
+    onSuccess: (accepted) => {
+      setActionError(null);
+      setSearchOpen(false);
+      setSearching(accepted.query);
     },
     onError: (error: Error) => setActionError(error.message),
   });
@@ -129,7 +150,10 @@ export function BoardPage() {
           nodes={nodes}
           showDiscarded={showDiscarded}
           onToggleDiscarded={() => setShowDiscarded((value) => !value)}
-          onNewSearch={() => undefined}
+          onNewSearch={() => {
+            setActionError(null);
+            setSearchOpen(true);
+          }}
         />
 
         <div className="stage">
@@ -142,6 +166,17 @@ export function BoardPage() {
                 Tabla
               </button>
             </div>
+            {searching ? (
+              <p className="search-notice" role="status">
+                <span>
+                  Buscando «{searching}» en OpenAlex. Si no llega ninguna fuente, prueba con otros
+                  términos.
+                </span>
+                <button type="button" aria-label="Cerrar aviso" onClick={() => setSearching(null)}>
+                  ×
+                </button>
+              </p>
+            ) : null}
           </div>
 
           {mode === 'grafo' ? (
@@ -172,7 +207,7 @@ export function BoardPage() {
       {addOpen ? (
         <Modal
           title="Añadir nodo a mano"
-          description="Mientras no exista el buscador, los nodos se crean a mano. La deduplicación por DOI ya funciona."
+          description="Para las fuentes que la búsqueda no encuentre. La deduplicación por DOI ya funciona."
           onClose={() => setAddOpen(false)}
         >
           <form className="cover-form" onSubmit={onSubmitNode}>
@@ -216,6 +251,16 @@ export function BoardPage() {
             </div>
           </form>
         </Modal>
+      ) : null}
+
+      {searchOpen ? (
+        <SearchDialog
+          question={meta.researchQuestion}
+          busy={searchMutation.isPending}
+          error={actionError}
+          onSubmit={(query) => searchMutation.mutate(query)}
+          onClose={() => setSearchOpen(false)}
+        />
       ) : null}
 
       {discardOpen && selected ? (

@@ -15,6 +15,7 @@ export function Sidebar({
   nodes,
   showDiscarded,
   onToggleDiscarded,
+  onNewSearch,
 }: {
   question: string | null;
   nodes: NodeRow[];
@@ -63,14 +64,9 @@ export function Sidebar({
           <span>Criterios</span>
           <span className="arrow">sin definir</span>
         </button>
-        <button
-          type="button"
-          className="btn block"
-          disabled
-          title="La búsqueda con agentes llega en la Etapa 2"
-        >
+        <button type="button" className="btn block" onClick={onNewSearch}>
           <span>Nueva búsqueda</span>
-          <span className="arrow">etapa 2</span>
+          <span className="arrow">OpenAlex</span>
         </button>
       </div>
     </aside>
