@@ -130,6 +130,10 @@ cd apps/web && pnpm typecheck && pnpm test && pnpm build
   sí entra en la transacción de negocio, pero el envío a Kafka ocurre después del commit: la entrega
   es at-least-once y el consumidor tendrá que deduplicar por `eventId`.
 
+## Licencia
+
+[MIT](LICENSE).
+
 ## Documentación
 
 - `docs/ETAPAS.md` — qué se construye en cada etapa y en qué orden; única fuente de verdad.

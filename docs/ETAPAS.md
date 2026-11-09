@@ -71,7 +71,8 @@ noviembre de 2026 con dos workers y un `kill -9`). La DLQ sigue pendiente: por a
 ilegible se registra en el log y se confirma.
 
 **2.2 Planificador y conector de OpenAlex.** El planificador divide la pregunta en subconsultas; el
-conector las ejecuta con rate limit y normaliza DOI y URL.
+conector las ejecuta con rate limit y normaliza DOI y URL. **El LLM queda en pausa** hasta tener
+proveedor: el planificador espera, y el conector de OpenAlex no depende de él.
 
 **2.3 Aprobación y presupuestos.** `SearchPlanned` → aprobación con `maxUsd` y `maxNodes` →
 `SearchRequested`. Reserva atómica contra el presupuesto de la operación y el diario de la key,
