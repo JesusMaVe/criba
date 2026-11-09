@@ -60,6 +60,28 @@ public class BoardService {
             throw new BoardException.Duplicate(existing.get().id());
         }
 
+        return insertNode(boardId, request, naturalKey, actor, correlationId, null);
+    }
+
+    /** Crea el nodo que propone un agente. Vacío si el tablero no existe o el nodo ya está. */
+    @Transactional
+    public Optional<Views.NodeView> addProposedNode(UUID boardId, Requests.CreateNode request, Actor actor,
+            UUID correlationId, UUID causationId) {
+
+        if (store.findBoard(boardId).isEmpty()) {
+            return Optional.empty();
+        }
+        String naturalKey = NaturalKey.of(request.doi(), request.openalexId(), request.url(),
+                request.title(), request.year());
+        if (store.findNodeByNaturalKey(boardId, naturalKey).isPresent()) {
+            return Optional.empty();
+        }
+        return Optional.of(insertNode(boardId, request, naturalKey, actor, correlationId, causationId));
+    }
+
+    private Views.NodeView insertNode(UUID boardId, Requests.CreateNode request, String naturalKey, Actor actor,
+            UUID correlationId, UUID causationId) {
+
         // Posición inicial determinista, en zigzag de dos columnas. El layout de verdad
         // (grafo de citas) llega con views en la Etapa 5; aquí solo hace falta que no se solapen.
         int index = (int) store.countNodes(boardId);
@@ -78,7 +100,7 @@ public class BoardService {
         events.publishEvent(EventEnvelope.of(
                 new NodeCreated(node.id(), kind.name(), node.title(), node.doi(), node.openalexId(),
                         node.url(), node.year(), node.venue(), node.state().name(), node.x(), node.y()),
-                boardId, seq, actor, correlationId, null));
+                boardId, seq, actor, correlationId, causationId));
 
         return Views.NodeView.of(node);
     }

@@ -37,6 +37,12 @@ public abstract class BoardException extends RuntimeException {
         }
     }
 
+    public static final class MissingQuery extends BoardException {
+        public MissingQuery() {
+            super("La búsqueda necesita una consulta o una pregunta de investigación");
+        }
+    }
+
     public static final class UnknownState extends BoardException {
         public UnknownState(String raw) {
             super("Estado desconocido: %s".formatted(raw));

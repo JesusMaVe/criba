@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.criba.shared.Actor;
 import com.criba.shared.EventEnvelope;
+import com.criba.shared.events.NodeCreated;
 import com.criba.shared.events.NodeDecisionMade;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -140,6 +143,50 @@ class BoardModuleTests {
                 new Requests.Decision("PRESELECCIONADO", "Revisión: sí lo usa", null), correlationId);
         assertEquals("PRESELECCIONADO", vuelta.node().state());
         assertTrue(vuelta.seq() > 4);
+    }
+
+    @Test
+    @DisplayName("un nodo propuesto queda como candidato y su evento nombra al agente")
+    void unNodoPropuestoQuedaComoCandidato(PublishedEvents events) {
+        UUID correlationId = UUID.randomUUID();
+        UUID causationId = UUID.randomUUID();
+        Views.BoardView board = service.createBoard(new Requests.CreateBoard("Tablero", null), correlationId);
+
+        Views.NodeView node = service.addProposedNode(board.id(),
+                new Requests.CreateNode("Un paper", "PAPER", "10.1000/propuesto", "W1", null, "Abstract", 2024, null),
+                Actor.agent("openalex"), correlationId, causationId).orElseThrow();
+
+        assertEquals("CANDIDATO", node.state());
+        assertEquals("Abstract", node.abstractText());
+        EventEnvelope evento = envelopes(events).getLast();
+        assertInstanceOf(NodeCreated.class, evento.payload());
+        assertEquals(Actor.agent("openalex"), evento.actor());
+        assertEquals(causationId, evento.causationId());
+    }
+
+    @Test
+    @DisplayName("un nodo propuesto repetido se ignora sin error y sin evento")
+    void unNodoPropuestoRepetidoSeIgnora(PublishedEvents events) {
+        UUID correlationId = UUID.randomUUID();
+        Views.BoardView board = service.createBoard(new Requests.CreateBoard("Tablero", null), correlationId);
+        Requests.CreateNode propuesta =
+                new Requests.CreateNode("Un paper", "PAPER", "10.1000/doble", "W1", null, null, 2024, null);
+
+        service.addProposedNode(board.id(), propuesta, Actor.agent("openalex"), correlationId, null);
+        Optional<Views.NodeView> segunda =
+                service.addProposedNode(board.id(), propuesta, Actor.agent("openalex"), correlationId, null);
+
+        assertTrue(segunda.isEmpty());
+        assertEquals(1, service.snapshot(board.id()).nodes().size());
+        assertEquals(1, envelopes(events).stream().filter(e -> e.payload() instanceof NodeCreated).count());
+    }
+
+    @Test
+    @DisplayName("una propuesta para un tablero inexistente se ignora")
+    void propuestaSinTablero() {
+        assertTrue(service.addProposedNode(UUID.randomUUID(),
+                new Requests.CreateNode("Un paper", "PAPER", "10.1000/huerfano", null, null, null, 2024, null),
+                Actor.agent("openalex"), UUID.randomUUID(), null).isEmpty());
     }
 
     private static List<EventEnvelope> envelopes(PublishedEvents events) {

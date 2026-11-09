@@ -20,6 +20,13 @@ spring:
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # Una tarea tarda; con el lote por defecto de 500 se pasaría de max.poll.interval.ms.
+      max-poll-records: 1
+      properties:
+        # Cubre el peor caso de una búsqueda con todos sus reintentos.
+        max.poll.interval.ms: 600000
+    producer:
+      acks: all
     listener:
       # El offset se confirma registro a registro, después de que el listener termina.
       ack-mode: record
