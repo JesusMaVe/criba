@@ -20,6 +20,7 @@ export function Sidebar({
   nodes: NodeRow[];
   showDiscarded: boolean;
   onToggleDiscarded: () => void;
+  onNewSearch: () => void;
 }) {
   const counts = countByState(nodes);
 

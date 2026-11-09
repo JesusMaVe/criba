@@ -129,6 +129,7 @@ export function BoardPage() {
           nodes={nodes}
           showDiscarded={showDiscarded}
           onToggleDiscarded={() => setShowDiscarded((value) => !value)}
+          onNewSearch={() => undefined}
         />
 
         <div className="stage">

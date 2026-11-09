@@ -59,3 +59,9 @@ export const decide = (boardId: string, nodeId: string, toState: string, reason?
     method: 'POST',
     body: JSON.stringify({ toState, reason: reason ?? null }),
   });
+
+export type SearchAccepted = { searchId: string; query: string };
+
+export const startSearch = (_boardId: string, _query: string): Promise<SearchAccepted> => {
+  throw new Error('por implementar');
+};
