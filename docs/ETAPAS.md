@@ -11,7 +11,7 @@ Cada etapa termina en algo que se puede demostrar. Las tres primeras forman el M
 | # | Etapa | Estado | Qué demuestra |
 | --- | --- | --- | --- |
 | 1 | Esqueleto | **completa** (salvo Redis, innecesario todavía) | un comando es un hecho visible: Postgres, Kafka y el WebSocket dicen lo mismo |
-| 2 | Agente buscador | siguiente | los nodos aparecen solos desde OpenAlex, deduplicados, dentro de un presupuesto |
+| 2 | Agente buscador | en curso: 2.1 completo, sigue 2.2 | los nodos aparecen solos desde OpenAlex, deduplicados, dentro de un presupuesto |
 | 3 | Criterios y evaluación | pendiente | la IA propone con evidencia verificable y la persona decide |
 | 4 | Equipo | pendiente | varias personas sobre el mismo tablero, con roles |
 | 5 | Más vistas | pendiente | aristas de cita, términos, línea de tiempo y embudo |
@@ -66,10 +66,13 @@ Se construye en tres cortes, cada uno utilizable:
 
 **2.1 Consumidor esqueleto.** `criba-agents` como segundo deployable: consume `agent.tasks`,
 deduplica en `processed_event`, hace ack y no hace nada más. Es el worker real sin lógica, y
-demuestra consumer groups, offsets, rebalanceo y deduplicación.
+demuestra consumer groups, offsets, rebalanceo y deduplicación. **Completo** (verificado el 8 de
+noviembre de 2026 con dos workers y un `kill -9`). La DLQ sigue pendiente: por ahora un registro
+ilegible se registra en el log y se confirma.
 
 **2.2 Planificador y conector de OpenAlex.** El planificador divide la pregunta en subconsultas; el
-conector las ejecuta con rate limit y normaliza DOI y URL.
+conector las ejecuta con rate limit y normaliza DOI y URL. **El LLM queda en pausa** hasta tener
+proveedor: el planificador espera, y el conector de OpenAlex no depende de él.
 
 **2.3 Aprobación y presupuestos.** `SearchPlanned` → aprobación con `maxUsd` y `maxNodes` →
 `SearchRequested`. Reserva atómica contra el presupuesto de la operación y el diario de la key,

@@ -11,6 +11,9 @@ procedencia, y cada decisión de aceptarlo o descartarlo queda registrada con su
 transacción en PostgreSQL → evento externalizado a Kafka → hecho reenviado por WebSocket → tablero
 actualizado en otra pestaña, con la interfaz ya vestida según `docs/DISENO.md`.
 
+**Etapa 2 (Agente buscador) en curso.** El corte 2.1 está completo: `criba-agents` consume
+`agent.tasks` y deduplica, todavía sin ejecutar ninguna tarea.
+
 ![Tablero](docs/capturas/etapa-0-tablero.png)
 
 ## Estructura
@@ -18,6 +21,7 @@ actualizado en otra pestaña, con la interfaz ya vestida según `docs/DISENO.md`
 ```
 apps/
   api/          Spring Boot 4.1 — monolito modular (Spring Modulith 2.1)
+  agents/       Worker Spring Boot 4.1: consumidor de agent.tasks
   web/          SPA TanStack Router + Query
 compose.yaml    PostgreSQL 18 + Kafka 4.3 (KRaft, un nodo)
 docs/
@@ -41,6 +45,7 @@ docs/
 docker compose up -d                     # PostgreSQL en 5433, Kafka en 9092
 cd apps/api  && ./mvnw spring-boot:run   # API en 8081
 cd apps/web  && pnpm install && pnpm dev # interfaz en http://localhost:5173
+cd apps/agents && ./mvnw spring-boot:run # worker, sin puerto HTTP
 ```
 
 Los puertos no son los de fábrica a propósito: **5433** porque el 5432 suele estar ocupado por otro
@@ -72,12 +77,30 @@ cd apps/web && node scripts/check-realtime.mjs <boardId>
 En el navegador: abre `http://localhost:5173/boards/<boardId>` en dos pestañas y crea o mueve un
 nodo en una; la otra se actualiza en menos de un segundo.
 
+## Comprobar el consumidor
+
+Arranca `apps/agents` en dos terminales: cada instancia se queda con tres de las seis particiones, y
+al matar una con `kill -9` la otra asume las seis (tarda lo que el `session.timeout` del grupo).
+
+```bash
+# Publica la misma tarea dos veces: una línea «Tarea nueva» y otra «Duplicado ignorado» en el log.
+TAREA='b1|{"eventId":"11111111-1111-1111-1111-111111111111","boardId":"22222222-2222-2222-2222-222222222222","type":"Prueba"}'
+printf '%s\n%s\n' "$TAREA" "$TAREA" | docker exec -i criba-kafka \
+  /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic agent.tasks \
+  --reader-property parse.key=true --reader-property 'key.separator=|'
+
+# Particiones, offsets confirmados y lag del grupo.
+docker exec criba-kafka /opt/kafka/bin/kafka-consumer-groups.sh \
+  --bootstrap-server localhost:9092 --describe --group agents
+```
+
 ## Pruebas
 
 ```bash
-cd apps/api && ./mvnw test     # máquina de estados, claves naturales, modularidad y el módulo board
-                               # con PostgreSQL y Kafka reales (Testcontainers)
-cd apps/web && pnpm typecheck && pnpm build
+cd apps/api && ./mvnw verify     # máquina de estados, claves naturales, modularidad y el módulo board
+                                 # con PostgreSQL y Kafka reales (Testcontainers), más cobertura
+cd apps/agents && ./mvnw verify  # deduplicación, offsets y fallos, con PostgreSQL y Kafka reales
+cd apps/web && pnpm typecheck && pnpm test && pnpm build
 ```
 
 ## Reglas del repositorio
@@ -89,6 +112,8 @@ cd apps/web && pnpm typecheck && pnpm build
 3. **Toda llamada que gasta la key del usuario reserva su peor caso antes de hacerse**, contra el
    presupuesto de la operación y el diario de la key (ver §4 de la propuesta).
 4. Commits en imperativo y con alcance: `feat(board): registra decisiones con motivo obligatorio`.
+5. **Todo cambio entra a `main` por pull request y con las pruebas en verde**, desarrollado con TDD
+   (ver [`CONTRIBUTING.md`](CONTRIBUTING.md)).
 
 ## Notas técnicas que cuestan una tarde si se descubren tarde
 
@@ -104,6 +129,10 @@ cd apps/web && pnpm typecheck && pnpm build
 - **El registro de publicaciones de Modulith no es la transacción.** La fila de `event_publication`
   sí entra en la transacción de negocio, pero el envío a Kafka ocurre después del commit: la entrega
   es at-least-once y el consumidor tendrá que deduplicar por `eventId`.
+
+## Licencia
+
+[MIT](LICENSE).
 
 ## Documentación
 
